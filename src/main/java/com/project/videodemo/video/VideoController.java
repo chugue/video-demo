@@ -1,15 +1,16 @@
 package com.project.videodemo.video;
 
 
-import org.slf4j.Logger;
+import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,15 +19,17 @@ import java.nio.file.StandardCopyOption;
 
 @Controller
 public class VideoController {
-    private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
-    private final Path videoLocation = Paths.get("videolocation");
+    private final Path videoLocation = Paths.get("/videolocation");
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(VideoController.class);
 
-    public VideoController(){
+    public VideoController() {
         try {
             Files.createDirectories(videoLocation);
             Files.createDirectories(videoLocation.resolve("system"));
+            logger.info("Video storage directory created at: {}", videoLocation.toAbsolutePath());
         } catch (IOException e) {
-            throw new RuntimeException("could not create storage directory", e);
+            logger.error("Could not create storage directory at: {}", videoLocation.toAbsolutePath(), e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -36,56 +39,49 @@ public class VideoController {
     }
 
     @PostMapping("/upload")
-    public String uploadVideo(@RequestParam("file") MultipartFile file){
-        try {
-            // 파일 저장
-            Path targetLocation = videoLocation.resolve(file.getOriginalFilename());
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+    public ResponseEntity<String> singleFileUpload (@RequestParam("file") MultipartFile file) {
 
-            // 원본 파일 이름에서 확장자를 제거한 이름 추출
+        try {
+            // 파일이름을 확장자로부터 분리, 없다면 output 이름으로 지정
             String originalFileName = file.getOriginalFilename();
             String baseFileName = originalFileName != null ? originalFileName.substring(0, originalFileName.lastIndexOf('.')) : "output";
 
-            // FFmpeg를 사용하여 DASH로 변환
-            String inputFilePath = targetLocation.toString();
-            String outputDirPath = videoLocation.resolve("system").toString();
-            String outputFilePath = String.format("%s/%s.mpd", outputDirPath, baseFileName);
-
-            // FFmpeg 명령어 수정 (H.264 비디오 코덱과 AAC 오디오 코덱 사용)
-            String command = String.format("ffmpeg -i %s -c:v libx264 -c:a aac -f dash %s", inputFilePath, outputFilePath);
-
-            Process process = Runtime.getRuntime().exec(command);
-            process.waitFor();
-
-            return "redirect:/";
-        } catch (IOException e) {
-            throw new RuntimeException("Fail to storage file", e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    @GetMapping("/videos/{filename}")
-    @ResponseBody
-    public ResponseEntity<Resource> getVideo(@PathVariable String filename) {
-        try {
-            Path filePath = videoLocation.resolve("system").resolve(filename).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-
-            String contentType = "application/dash+xml";
-            if (filename.endsWith(".m4s")) {
-                contentType = "video/iso.segment";
-            } else if (filename.endsWith(".mp4")) {
-                contentType = "video/mp4";
+            // 파일 명에 따라 디렉토리 생성
+            Path directoryPath = videoLocation.resolve(baseFileName);
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
             }
 
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_TYPE, contentType)
-                    .body(resource);
+            // 파일을 서버에 저장
+            Path targetLocation =directoryPath.resolve(file.getOriginalFilename());
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            // FFmpeg 명령어 준비 - 진짜 피일이름과, 어떤 이름으로 변환할 것인지에 대해서 명시해야된다.
+            String inputFilePath = targetLocation.toString();
+            String outputFileName = baseFileName + ".mpd";
+            String outputFilePath = directoryPath.resolve(outputFileName).toString(); // 수정된 부분: 출력 파일 경로에 파일 이름 지정
+
+            // FFmpeg 명령어 배열 준비
+            String[] command = { "ffmpeg", "-i", inputFilePath, "-c:v", "libx264", "-c:a", "aac", "-f", "dash", outputFilePath };
+
+            // FFmpeg 명령어 실행
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("FFmpeg command failed with exit code " + exitCode);
+            }
+
+            return ResponseEntity.ok("File uploaded and processed successfully");
         } catch (IOException e) {
-            logger.error("Failed to load file", e);
-            return ResponseEntity.status(500).body(null);
+            logger.error("File processing failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing failed: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("FFmpeg command was interrupted", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("FFmpeg command was interrupted: " + e.getMessage());
         }
+
     }
 }

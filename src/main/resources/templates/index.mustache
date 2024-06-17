@@ -1,79 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple DASH Video Streaming</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <title>Video Upload</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 </head>
 <body>
-<div class="container">
-    <h1>Upload and Watch Video</h1>
+<h1>Upload a video</h1>
+<input type="file" id="file"/>
+<button id="uploadButton">Upload</button>
+<p id="message"></p>
 
-    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="fileInput" accept="video/*">
-        <button type="submit">Upload</button>
-    </form>
-
-    <div class="video-container">
-        <h2>Auto Play Video</h2>
-        <video id="autoPlayVideo" width="640" height="360" controls autoplay></video>
-    </div>
-
-    <div class="video-container">
-        <h2>Manual Play Video</h2>
-        <video id="manualPlayVideo" width="640" height="360" controls></video>
-    </div>
-</div>
 
 <script>
-    $(document).ready(function() {
-        $('#uploadForm').on('submit', function(event) {
-            event.preventDefault();
-            uploadVideo();
-        });
-    });
-
-    function uploadVideo() {
-        var formData = new FormData($('#uploadForm')[0]);
-
-        $.ajax({
-            url: '/upload',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                alert('File uploaded successfully.');
-                var uploadedFileName = formData.get('file').name;
-                var baseFileName = uploadedFileName.substring(0, uploadedFileName.lastIndexOf('.'));
-            },
-            error: function(response) {
-                alert('File upload failed.');
+    $(document).ready(function () {
+        $('#uploadButton').on('click', function () {
+            var fileInput = $('#file')[0];
+            if (fileInput.files.length === 0) {
+                $('#message').text('Please select a file to upload');
+                return;
             }
-        });
-    }
 
-    $(document).ready(function() {
-        playVideoOnLoad("/videolocation/system/영상.mpd")
+            var formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                success: function (data) {
+                    $('#message').text(data.message);
+                },
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        });
     });
-
-    function playVideoOnLoad(baseFileName) {
-        // 이 함수는 페이지가 로드될 때 호출되며 비디오를 재생합니다.
-        $(document).ready(function() {
-            playVideo(baseFileName);
-        });
-    }
-
-    function playVideo(baseFileName) {
-        var autoPlayer = dashjs.MediaPlayer().create();
-        autoPlayer.initialize(document.querySelector("#autoPlayVideo"), baseFileName, true);
-
-        var manualPlayer = dashjs.MediaPlayer().create();
-        manualPlayer.initialize(document.querySelector("#manualPlayVideo"), baseFileName, false);
-    }
 </script>
 </body>
 </html>
