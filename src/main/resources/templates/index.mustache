@@ -1,10 +1,23 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Video Upload</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+    <style>
+        #qualityLevels {
+            margin-top: 20px;
+        }
+        #qualityLevels button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
+
 <h1>Upload Video</h1>
 <form id="uploadForm">
     <input type="file" id="file" name="file" required>
@@ -13,7 +26,7 @@
 
 <h1>DASH Video Player</h1>
 <video id="videoPlayer" controls width="640" height="360"></video>
-
+<div id="qualityLevels"></div> <!-- 화질 선택 버튼을 표시할 영역 -->
 
 <script>
     $(document).ready(function () {
@@ -29,21 +42,35 @@
                 contentType: false,
                 processData: false,
                 success: function (response) {
-                    alert('Video processing completed');
+                    alert('업로드가 완료되었습니다.');
                 },
                 error: function (xhr, status, error) {
-                    alert('Video processing failed: ' + error);
+                    alert('업로드에 실패하였습니다.: ' + error);
                 }
             });
         });
-    });
-    $(document).ready(function () {
-        var filename = 'alien-romulus-official-trailer_1080p.mpd';
+
+        var filename = 'avengers.mpd';
         var url = 'http://localhost:8080/videos?filename=' + encodeURIComponent(filename);
         console.log("URL: " + url);
 
         var player = dashjs.MediaPlayer().create();
         player.initialize(document.querySelector("#videoPlayer"), url, true);
+
+        // 화질 선택 메뉴 설정
+        player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function() {
+            var videoQualities = player.getBitrateInfoListFor("video");
+            var qualityLevelsDiv = document.getElementById("qualityLevels");
+
+            videoQualities.forEach(function(quality, index) {
+                var button = document.createElement("button");
+                button.innerText = quality.height + "p";
+                button.onclick = function() {
+                    player.setQualityFor("video", index);
+                };
+                qualityLevelsDiv.appendChild(button);
+            });
+        });
     });
 </script>
 </body>

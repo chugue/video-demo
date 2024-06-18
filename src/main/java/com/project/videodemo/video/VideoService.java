@@ -22,10 +22,11 @@ public class VideoService {
         ProcessBuilder pb = new ProcessBuilder(
                 "ffmpeg", "-i", inputFilePath,
                 "-map", "0:v", "-map", "0:a",
-                "-b:v:0", "500k", "-s:v:0", "640x360",
-                "-b:v:1", "1000k", "-s:v:1", "1280x720",
-                "-b:v:2", "2000k", "-s:v:2", "1920x1080",
+                "-map", "0:v", "-b:v:0", "3000k", "-s:v:0", "1920x1080", // Full HD
+                "-map", "0:v", "-b:v:1", "1500k", "-s:v:1", "1280x720",  // HD
+                "-map", "0:v", "-b:v:2", "800k",  "-s:v:2", "854x480",   // SD
                 "-c:v", "libx264", "-c:a", "aac",
+                "-crf", "10",
                 "-f", "dash",
                 "-seg_duration", "4",
                 "-use_template", "1",
