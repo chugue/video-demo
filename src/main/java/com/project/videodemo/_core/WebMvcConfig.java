@@ -1,11 +1,14 @@
 package com.project.videodemo._core;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
 @Configuration
+@EnableWebMvc
 public class WebMvcConfig implements WebMvcConfigurer {
 
 
@@ -13,12 +16,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         WebMvcConfigurer.super.addResourceHandlers(registry);
 
-        registry
-                // 파일 다운로드 URL 패턴
-                .addResourceHandler("/videolocation/**")
-                // 실제 파일이 저장된 경로
+        registry.addResourceHandler("/videolocation/**")
                 .addResourceLocations("file:./videolocation/")
-                .setCachePeriod(60 * 60) // 초 단위 => 한시간
+                .setCachePeriod(60 * 60)
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
@@ -27,5 +27,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .setCachePeriod(60 * 60)
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
+
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(false)
+                .maxAge(3600);
     }
 }

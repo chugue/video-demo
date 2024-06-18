@@ -1,40 +1,49 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Video Upload</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 </head>
 <body>
-<h1>Upload a video</h1>
-<input type="file" id="file"/>
-<button id="uploadButton">Upload</button>
-<p id="message"></p>
+<h1>Upload Video</h1>
+<form id="uploadForm">
+    <input type="file" id="file" name="file" required>
+    <button type="submit">Upload</button>
+</form>
+
+<h1>DASH Video Player</h1>
+<video id="videoPlayer" controls width="640" height="360"></video>
 
 
 <script>
     $(document).ready(function () {
-        $('#uploadButton').on('click', function () {
-            var fileInput = $('#file')[0];
-            if (fileInput.files.length === 0) {
-                $('#message').text('Please select a file to upload');
-                return;
-            }
-
+        $('#uploadForm').on('submit', function (event) {
+            event.preventDefault();
             var formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+            formData.append('file', $('#file')[0].files[0]);
 
             $.ajax({
                 url: '/upload',
                 type: 'POST',
                 data: formData,
-                success: function (data) {
-                    $('#message').text(data.message);
-                },
-                cache: false,
                 contentType: false,
-                processData: false
+                processData: false,
+                success: function (response) {
+                    alert('Video processing completed');
+                },
+                error: function (xhr, status, error) {
+                    alert('Video processing failed: ' + error);
+                }
             });
         });
+    });
+    $(document).ready(function () {
+        var filename = 'alien-romulus-official-trailer_1080p.mpd';
+        var url = 'http://localhost:8080/videos?filename=' + encodeURIComponent(filename);
+        console.log("URL: " + url);
+
+        var player = dashjs.MediaPlayer().create();
+        player.initialize(document.querySelector("#videoPlayer"), url, true);
     });
 </script>
 </body>
