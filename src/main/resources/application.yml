@@ -6,7 +6,7 @@ server:
     # url rewrite ?? ??
     session:
       tracking-modes: cookie
-  port: 8080
+  port: 7000
 
 spring:
   datasource:
