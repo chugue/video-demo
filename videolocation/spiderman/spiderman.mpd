@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:mpeg:dash:schema:mpd:2011"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+	profiles="urn:mpeg:dash:profile:isoff-live:2011"
+	type="static"
+	mediaPresentationDuration="PT3M3.9S"
+	maxSegmentDuration="PT4.0S"
+	minBufferTime="PT16.3S">
+	<ProgramInformation>
+	</ProgramInformation>
+	<ServiceDescription id="0">
+	</ServiceDescription>
+	<Period id="0" start="PT0.0S">
+		<AdaptationSet id="0" contentType="video" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true" frameRate="24000/1001" maxWidth="1920" maxHeight="1080" par="16:9" lang="und">
+			<Representation id="0" mimeType="video/mp4" codecs="avc1.640028" bandwidth="3000000" width="1920" height="1080" sar="1:1">
+				<SegmentTemplate timescale="24000" initialization="videolocation/spiderman/spiderman_init_$RepresentationID$.m4s" media="videolocation/spiderman/spiderman_chunk_$RepresentationID$_$Number%05d$.m4s" startNumber="1">
+					<SegmentTimeline>
+						<S t="0" d="144144" />
+						<S d="118118" />
+						<S d="128128" />
+						<S d="103103" />
+						<S d="96096" />
+						<S d="106106" />
+						<S d="120120" />
+						<S d="143143" />
+						<S d="100100" r="1" />
+						<S d="104104" />
+						<S d="123123" />
+						<S d="109109" />
+						<S d="134134" />
+						<S d="106106" />
+						<S d="133133" />
+						<S d="173173" />
+						<S d="103103" />
+						<S d="99099" />
+						<S d="120120" />
+						<S d="100100" />
+						<S d="120120" />
+						<S d="144144" />
+						<S d="129129" />
+						<S d="97097" />
+						<S d="123123" />
+						<S d="122122" />
+						<S d="136136" />
+						<S d="106106" />
+						<S d="130130" />
+						<S d="128128" />
+						<S d="154154" />
+						<S d="113113" />
+						<S d="196196" />
+						<S d="251251" />
+					</SegmentTimeline>
+				</SegmentTemplate>
+			</Representation>
+		</AdaptationSet>
+		<AdaptationSet id="1" contentType="audio" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true" lang="eng">
+			<Representation id="1" mimeType="audio/mp4" codecs="mp4a.40.2" bandwidth="128000" audioSamplingRate="44100">
+				<AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+				<SegmentTemplate timescale="44100" initialization="videolocation/spiderman/spiderman_init_$RepresentationID$.m4s" media="videolocation/spiderman/spiderman_chunk_$RepresentationID$_$Number%05d$.m4s" startNumber="1">
+					<SegmentTimeline>
+						<S t="0" d="176128" />
+						<S d="177152" r="43" />
+						<S d="145408" />
+					</SegmentTimeline>
+				</SegmentTemplate>
+			</Representation>
+		</AdaptationSet>
+	</Period>
+</MPD>
